@@ -4,7 +4,7 @@
   "description": "Go to definition providers for bem files: styles with cn() and translations with react-intl",
   "publisher": "SergeyPushkin",
   "icon": "./icon.png",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/proof666/bem-definitions.git"
