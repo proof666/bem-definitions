@@ -5,6 +5,10 @@
   "publisher": "SergeyPushkin",
   "icon": "./icon.png",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/proof666/bem-definitions.git"
+  },
   "engines": {
     "vscode": "^1.89.0"
   },
