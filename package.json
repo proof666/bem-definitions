@@ -1,0 +1,55 @@
+{
+  "name": "bem-definitions",
+  "displayName": "bem-definitions",
+  "description": "Go to definition providers for bem files: styles with cn() and translations with react-intl",
+  "publisher": "SergeyPushkin",
+  "icon": "./icon.png",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "typescriptreact",
+        "extensions": [
+          ".tsx"
+        ]
+      }
+    ],
+    "definitions": [
+      {
+        "language": "typescriptreact",
+        "pattern": "/cn[a-zA-z]+\\(\\'[a-zA-z-]+\\'.*\\)/g"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@bem-react/classname": "^1.6.0",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.89.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.3.9",
+    "bem-naming": "^1.0.1",
+    "bemg": "^2.2.1",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  }
+}
