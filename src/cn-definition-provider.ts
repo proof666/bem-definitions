@@ -16,84 +16,90 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.DefinitionLink[]> {
-    const range = document.getWordRangeAtPosition(
-      position,
-      /cn[a-zA-z]+\(\'[a-zA-z-]+\'.*\)/g
-    );
-
-    if (!range) return;
-
-    const editor = vscode.window.activeTextEditor;
-    const text = editor?.document.getText(range);
-    const currentEntityPath = ensureDirectoryPath(document.uri.fsPath);
-
-    const {
-      config: { naming },
-    } = getConfigs(currentEntityPath);
-
-    const bemNaming = createBemNaming(naming);
-
-    const { currentBlockRoot, ...bem } = getBemStringByPath(currentEntityPath, [
-      bemNaming.elemDelim,
-      bemNaming.modDelim,
-      bemNaming.modValDelim,
-    ]);
-
-    // used in eval()
-    const cn = withNaming({
-      e: bemNaming.elemDelim,
-      m: bemNaming.modDelim,
-      v: bemNaming.modValDelim,
-    });
-
-    if (!text || !text.startsWith("cn")) {
-      return;
-    }
-
-    const currentBlockName = currentBlockRoot.split("/").pop();
-    const code = `cn('${currentBlockName}')` + text.replace(/cn.*\(/g, "(");
-
-    let classList;
     try {
-      classList = eval(code);
-    } catch (error) {
-      console.error("Error:", error);
-    }
+      const range = document.getWordRangeAtPosition(
+        position,
+        /cn[a-zA-z]+\(\'[a-zA-z-]+\'.*\)/g
+      );
 
-    const classLocations = findClassesInFiles(
-      currentBlockRoot,
-      classList.split(" ")
-    );
+      if (!range) return;
 
-    console.debug({
-      bem,
-      text,
-      currentBlockRoot,
-      code,
-      currentBlockName,
-      classList,
-    });
+      const editor = vscode.window.activeTextEditor;
+      const text = editor?.document.getText(range);
+      const currentEntityPath = ensureDirectoryPath(document.uri.fsPath);
 
-    if (classLocations) {
-      return classLocations.map((definitionLocation) => {
-        const targetRange = new vscode.Range(
-          new vscode.Position(
-            definitionLocation.start.line,
-            definitionLocation.start.character
-          ),
-          new vscode.Position(
-            definitionLocation.end.line,
-            definitionLocation.end.character
-          )
-        );
-        return {
-          targetUri: vscode.Uri.file(definitionLocation.file),
-          targetRange: targetRange,
-          targetSelectionRange: targetRange,
-        };
+      const {
+        config: { naming },
+      } = getConfigs(currentEntityPath);
+
+      const bemNaming = createBemNaming(naming);
+
+      const { currentBlockRoot, ...bem } = getBemStringByPath(
+        currentEntityPath,
+        [bemNaming.elemDelim, bemNaming.modDelim, bemNaming.modValDelim]
+      );
+
+      // used in eval()
+      const cn = withNaming({
+        e: bemNaming.elemDelim,
+        m: bemNaming.modDelim,
+        v: bemNaming.modValDelim,
       });
-    } else {
-      vscode.window.showInformationMessage(`No definition found for "${text}"`);
+
+      if (!text || !text.startsWith("cn")) {
+        return;
+      }
+
+      const currentBlockName = currentBlockRoot.split("/").pop();
+      const code = `cn('${currentBlockName}')` + text.replace(/cn.*\(/g, "(");
+
+      let classList;
+      try {
+        classList = eval(code);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+
+      const classLocations = findClassesInFiles(
+        currentBlockRoot,
+        classList.split(" ")
+      );
+
+      console.debug({
+        bem,
+        text,
+        currentBlockRoot,
+        code,
+        currentBlockName,
+        classList,
+      });
+
+      if (classLocations) {
+        return classLocations.map((definitionLocation) => {
+          const targetRange = new vscode.Range(
+            new vscode.Position(
+              definitionLocation.start.line,
+              definitionLocation.start.character
+            ),
+            new vscode.Position(
+              definitionLocation.end.line,
+              definitionLocation.end.character
+            )
+          );
+          return {
+            targetUri: vscode.Uri.file(definitionLocation.file),
+            targetRange: targetRange,
+            targetSelectionRange: targetRange,
+          };
+        });
+      } else {
+        vscode.window.showInformationMessage(
+          `No definition found for "${text}"`
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      vscode.window.showInformationMessage(`Error: ${error}`);
     }
   }
 }
