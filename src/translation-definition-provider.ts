@@ -18,13 +18,14 @@ export class TranslationDefinitionProvider
     position: vscode.Position
   ): vscode.ProviderResult<vscode.DefinitionLink[]> {
     try {
-      const re = /[\'\"\`][a-zA-Z-\._]+\..*[\'\"\`]/g;
+      const re =
+        /((?<=id[=:])|(?<=id[=:]\s))[\'\"\`][a-zA-Z-\._]+\..*[\'\"\`]/g;
       const range = document.getWordRangeAtPosition(position, re);
 
       if (!range) return;
 
       const editor = vscode.window.activeTextEditor;
-      const text = editor?.document.getText(range);
+      const text = editor?.document.getText(range).replace(/'/g, '"');
       const currentEntityPath = ensureDirectoryPath(document.uri.fsPath);
 
       const {
