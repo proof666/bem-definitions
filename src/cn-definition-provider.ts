@@ -92,6 +92,7 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
         code,
         currentBlockName,
         classList,
+        classLocations,
       });
 
       if (classLocations) {
