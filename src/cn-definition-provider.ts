@@ -10,6 +10,9 @@ import ensureDirectoryPath from "bemg/lib/generate/ensureDirectoryPath";
 import getConfigs from "bemg/lib/getConfigs";
 // @ts-ignore
 import createBemNaming from "bem-naming";
+import { getLogger } from "./utils/logger";
+
+const logger = getLogger("cn-definition-provider");
 
 export class CnDefinitionProvider implements vscode.DefinitionProvider {
   provideDefinition(
@@ -22,7 +25,11 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
         /(cn[a-zA-z]+)(\(\'[a-zA-z-]+\'.*\)|\({}.*\)|\(\))/g
       );
 
-      if (!range) return;
+      if (!range) {
+        logger.info("No range. Exit.");
+
+        return;
+      }
 
       const editor = vscode.window.activeTextEditor;
       const text = editor?.document.getText(range);
@@ -55,9 +62,22 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
 
       let classList;
       try {
-        classList = eval(code);
+        const formattedCode = code.replace(/,\s?\[[a-zA-Z]+\]/g, "");
+        logger.info(`Formatted code:`, { formattedCode });
+
+        classList = eval(formattedCode);
+
+        logger.info("Retrieved classlist:", { classList });
+
+        if (!classList) {
+          logger.info(
+            `ClassList is empty, fallbackk to currentBlockName "${currentBlockName}".`
+          );
+          classList = currentBlockName;
+        }
       } catch (error) {
-        console.error("Error:", error);
+        logger.error(`Error while executing code:`, error);
+        return;
       }
 
       const classLocations = findClassesInFiles(
@@ -65,7 +85,7 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
         classList.split(" ")
       );
 
-      console.log({
+      logger.info("Debug info:", {
         bem,
         text,
         currentBlockRoot,
@@ -92,14 +112,9 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
             targetSelectionRange: targetRange,
           };
         });
-      } else {
-        vscode.window.showInformationMessage(
-          `No definition found for "${text}"`
-        );
       }
     } catch (error) {
-      console.error(error);
-      vscode.window.showInformationMessage(`Error: ${error}`);
+      logger.error("Fatal error:", { error });
     }
   }
 }

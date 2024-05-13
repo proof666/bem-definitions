@@ -9,6 +9,9 @@ import getConfigs from "bemg/lib/getConfigs";
 // @ts-ignore
 import createBemNaming from "bem-naming";
 import { findTranslationInFiles } from "./utils/find-translation-in-files";
+import { getLogger } from "./utils/logger";
+
+const logger = getLogger("translation-definition-provider");
 
 export class TranslationDefinitionProvider
   implements vscode.DefinitionProvider
@@ -22,7 +25,11 @@ export class TranslationDefinitionProvider
         /((?<=id[=:])|(?<=id[=:]\s))[\'\"\`][a-zA-Z-\._]+\..*[\'\"\`]/g;
       const range = document.getWordRangeAtPosition(position, re);
 
-      if (!range) return;
+      if (!range) {
+        logger.info("No range. Exit.");
+
+        return;
+      }
 
       const editor = vscode.window.activeTextEditor;
       const text = editor?.document.getText(range).replace(/'/g, '"');
@@ -39,14 +46,17 @@ export class TranslationDefinitionProvider
         [bemNaming.elemDelim, bemNaming.modDelim, bemNaming.modValDelim]
       );
 
-      if (!text || !re.test(text)) {
+      if (!text || !text.startsWith('"')) {
+        logger.info("No text parsed by provided range. Exit.");
+
         return;
       }
 
       const currentBlockName = currentBlockRoot.split("/").pop();
 
       const translation = findTranslationInFiles(currentBlockRoot, text);
-      console.log({
+
+      logger.info("Debug info:", {
         bem,
         text,
         currentBlockRoot,
@@ -72,14 +82,9 @@ export class TranslationDefinitionProvider
             targetSelectionRange: targetRange,
           };
         });
-      } else {
-        vscode.window.showInformationMessage(
-          `No definition found for "${text}"`
-        );
       }
     } catch (error) {
-      console.error(error);
-      vscode.window.showInformationMessage(`Error: ${error}`);
+      logger.error("Fatal error:", { error });
     }
   }
 }

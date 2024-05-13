@@ -4,7 +4,7 @@
   "description": "Go to definition providers for bem files: styles with cn() and translations with react-intl",
   "publisher": "SergeyPushkin",
   "icon": "./icon.png",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/proof666/bem-definitions.git"
@@ -27,12 +27,6 @@
           ".tsx"
         ]
       }
-    ],
-    "definitions": [
-      {
-        "language": "typescriptreact",
-        "pattern": "/cn[a-zA-z]+\\(\\'[a-zA-z-]+\\'.*\\)/g"
-      }
     ]
   },
   "scripts": {
@@ -45,6 +39,7 @@
   },
   "dependencies": {
     "@bem-react/classname": "^1.6.0",
+    "@vscode-logging/logger": "^2.0.0",
     "bem-naming": "^1.0.1",
     "bemg": "^2.2.1"
   },
