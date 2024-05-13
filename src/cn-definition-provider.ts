@@ -19,7 +19,7 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
     try {
       const range = document.getWordRangeAtPosition(
         position,
-        /cn[a-zA-z]+\(\'[a-zA-z-]+\'.*\)/g
+        /(cn[a-zA-z]+)(\(\'[a-zA-z-]+\'.*\)|\({}.*\)|\(\))/g
       );
 
       if (!range) return;
@@ -65,7 +65,7 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
         classList.split(" ")
       );
 
-      console.debug({
+      console.log({
         bem,
         text,
         currentBlockRoot,
