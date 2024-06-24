@@ -31,6 +31,10 @@ export const AppSpin: FC<AppSpinProps> = () => (
 <Col className={cnTrackVersionForm('column', { type: 'main' })} span={16}>
 ```
 
+```jsx
+<Col className={cnTrackVersionForm('column', { type })} span={16}>
+```
+
 ## Translations
 
 You can use `cmd + click` on any word in translation key in next situations for translations:
@@ -44,6 +48,10 @@ You can use `cmd + click` on any word in translation key in next situations for 
   key="track-version-form.milestones"
   id="track-version-form.milestones"
 />
+```
+
+```jsx
+<FormMessage prefix="label" name="content" />
 ```
 
 ```jsx

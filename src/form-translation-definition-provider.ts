@@ -1,6 +1,4 @@
 import * as vscode from "vscode";
-import { withNaming } from "@bem-react/classname";
-import { findClassesInFiles } from "./utils/find-classes-in-files";
 
 // @ts-ignore
 import getBemStringByPath from "bemg/lib/generate/getBemStringByPath";
@@ -10,20 +8,22 @@ import ensureDirectoryPath from "bemg/lib/generate/ensureDirectoryPath";
 import getConfigs from "bemg/lib/getConfigs";
 // @ts-ignore
 import createBemNaming from "bem-naming";
+import { findTranslationInFiles } from "./utils/find-translation-in-files";
 import { getLogger } from "./utils/logger";
 
-const logger = getLogger("cn-definition-provider");
+const logger = getLogger("form-translation-definition-provider");
 
-export class CnDefinitionProvider implements vscode.DefinitionProvider {
+export class FormTranslationDefinitionProvider
+  implements vscode.DefinitionProvider
+{
   provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.DefinitionLink[]> {
     try {
-      const range = document.getWordRangeAtPosition(
-        position,
-        /(cn[a-zA-z]+)(\(\'[a-zA-z-]+\'.*\)|\({}.*\)|\({ .* }.*\)|\(\))/g
-      );
+      const re =
+        /<FormMessage\s+(?:prefix="([^"]*)"\s+name="([^"]*)"|name="([^"]*)"\s+prefix="([^"]*)")\s*\/?>|formMessage\(\{\s*(?:prefix:\s*'([^']*)'\s*,\s*name:\s*'([^']*)'|name:\s*'([^']*)'\s*,\s*prefix:\s*'([^']*)')\s*\}\)/g;
+      const range = document.getWordRangeAtPosition(position, re);
 
       if (!range) {
         logger.info("No range. Exit.");
@@ -32,8 +32,27 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
       }
 
       const editor = vscode.window.activeTextEditor;
-      const text = editor?.document.getText(range);
+      const text = editor?.document.getText(range).replace(/'/g, '"');
       const currentEntityPath = ensureDirectoryPath(document.uri.fsPath);
+
+      if (!text) {
+        logger.info("No text parsed by provided range. Exit.");
+
+        return;
+      }
+
+      const match = re.exec(
+        text.includes("FormMessage") ? text : text.replace(/"/g, "'")
+      );
+
+      if (!match) {
+        logger.info("No text parsed by provided range. Exit.");
+
+        return;
+      }
+
+      const prefix = match[1] || match[4] || match[5];
+      const name = match[2] || match[3] || match[6];
 
       const {
         config: { naming },
@@ -46,59 +65,27 @@ export class CnDefinitionProvider implements vscode.DefinitionProvider {
         [bemNaming.elemDelim, bemNaming.modDelim, bemNaming.modValDelim]
       );
 
-      // used in eval()
-      const cn = withNaming({
-        e: bemNaming.elemDelim,
-        m: bemNaming.modDelim,
-        v: bemNaming.modValDelim,
-      });
-
-      if (!text || !text.startsWith("cn")) {
-        return;
-      }
-
       const currentBlockName = currentBlockRoot.split("/").pop();
-      const code = `cn('${currentBlockName}')` + text.replace(/cn.*\(/g, "(");
 
-      let classList;
-      try {
-        const formattedCode = code
-          .replace(/,\s?\[[a-zA-Z]+\]/g, "")
-          .replace(/(?<!')\s\}/g, ": true }");
-        logger.info(`Formatted code:`, { formattedCode });
+      const suffix = [prefix, name].filter(Boolean).join(":");
+      const translationText =
+        '"' + [currentBlockName, suffix].filter(Boolean).join(".") + '"';
 
-        classList = eval(formattedCode);
-
-        logger.info("Retrieved classlist:", { classList });
-
-        if (!classList) {
-          logger.info(
-            `ClassList is empty, fallbackk to currentBlockName "${currentBlockName}".`
-          );
-          classList = currentBlockName;
-        }
-      } catch (error) {
-        logger.error(`Error while executing code:`, error);
-        return;
-      }
-
-      const classLocations = findClassesInFiles(
+      const translation = findTranslationInFiles(
         currentBlockRoot,
-        classList.split(" ")
+        translationText
       );
 
       logger.info("Debug info:", {
         bem,
         text,
         currentBlockRoot,
-        code,
         currentBlockName,
-        classList,
-        classLocations,
+        translation,
       });
 
-      if (classLocations) {
-        return classLocations.map((definitionLocation) => {
+      if (translation) {
+        return translation.map((definitionLocation) => {
           const targetRange = new vscode.Range(
             new vscode.Position(
               definitionLocation.start.line,
