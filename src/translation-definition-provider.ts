@@ -10,6 +10,7 @@ import getConfigs from "bemg/lib/getConfigs";
 import createBemNaming from "bem-naming";
 import { findTranslationInFiles } from "./utils/find-translation-in-files";
 import { getLogger } from "./utils/logger";
+import { adjustEntityPath } from "./utils/adjust-entity-path";
 
 const logger = getLogger("translation-definition-provider");
 
@@ -22,7 +23,7 @@ export class TranslationDefinitionProvider
   ): vscode.ProviderResult<vscode.DefinitionLink[]> {
     try {
       const re =
-        /((?<=id[=:])|(?<=id[=:]\s))[\'\"\`][a-zA-Z-\._]+\..*[\'\"\`]/g;
+        /((?<=id[=:])|(?<=id[=:]\s))[\'\"\`][a-zA-Z0-9-\._]+\..*[\'\"\`]/g;
       const range = document.getWordRangeAtPosition(position, re);
 
       if (!range) {
@@ -33,7 +34,9 @@ export class TranslationDefinitionProvider
 
       const editor = vscode.window.activeTextEditor;
       const text = editor?.document.getText(range).replace(/'/g, '"');
-      const currentEntityPath = ensureDirectoryPath(document.uri.fsPath);
+      const currentEntityPath: string = adjustEntityPath(
+        ensureDirectoryPath(document.uri.fsPath)
+      );
 
       const {
         config: { naming },

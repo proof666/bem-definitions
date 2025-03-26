@@ -10,6 +10,7 @@ import getConfigs from "bemg/lib/getConfigs";
 import createBemNaming from "bem-naming";
 import { findTranslationInFiles } from "./utils/find-translation-in-files";
 import { getLogger } from "./utils/logger";
+import { adjustEntityPath } from "./utils/adjust-entity-path";
 
 const logger = getLogger("form-translation-definition-provider");
 
@@ -33,7 +34,9 @@ export class FormTranslationDefinitionProvider
 
       const editor = vscode.window.activeTextEditor;
       const text = editor?.document.getText(range).replace(/'/g, '"');
-      const currentEntityPath = ensureDirectoryPath(document.uri.fsPath);
+      const currentEntityPath: string = adjustEntityPath(
+        ensureDirectoryPath(document.uri.fsPath)
+      );
 
       if (!text) {
         logger.info("No text parsed by provided range. Exit.");

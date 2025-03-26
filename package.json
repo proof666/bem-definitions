@@ -4,7 +4,7 @@
   "description": "Go to definition providers for bem files: styles with cn() and translations with react-intl",
   "publisher": "SergeyPushkin",
   "icon": "./icon.png",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "repository": {
     "type": "git",
     "url": "https://github.com/proof666/bem-definitions.git"
@@ -16,7 +16,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:typescriptreact"
+    "onLanguage:typescriptreact",
+    "onLanguage:typescript"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -25,6 +26,12 @@
         "id": "typescriptreact",
         "extensions": [
           ".tsx"
+        ]
+      },
+      {
+        "id": "typescript",
+        "extensions": [
+          ".ts"
         ]
       }
     ]
