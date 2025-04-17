@@ -3,8 +3,38 @@ import * as vscode from "vscode";
 import { CnDefinitionProvider } from "./cn-definition-provider";
 import { TranslationDefinitionProvider } from "./translation-definition-provider";
 import { FormTranslationDefinitionProvider } from "./form-translation-definition-provider";
+const exec = require("child_process").exec;
 
 export function activate(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "bem-definitions.polyglot",
+      (uri: vscode.Uri) => {
+        const dirPath = vscode.Uri.joinPath(uri, "..").fsPath;
+
+        const command = `npx polyglot code-sync ${uri.path} -y`;
+
+        exec(
+          command,
+          { cwd: dirPath },
+          (error: any, stdout: string, stderr: string) => {
+            if (error) {
+              vscode.window.showErrorMessage(`Error: ${error.message}`);
+              return;
+            }
+            if (stderr) {
+              vscode.window.showErrorMessage(`Error: ${stderr}`);
+              return;
+            }
+            vscode.window.showInformationMessage(
+              `Command executed successfully: ${stdout}`
+            );
+          }
+        );
+      }
+    )
+  );
+
   let disposable = vscode.languages.registerDefinitionProvider(
     { language: "typescriptreact" },
     new CnDefinitionProvider()
